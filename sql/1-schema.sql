@@ -134,3 +134,18 @@ CREATE TABLE coupons
   PRIMARY KEY (user_id, code)
 )
   COMMENT 'クーポンテーブル';
+
+-- ride_statusesの検索改善
+ALTER TABLE ride_statuses ADD INDEX idx_ride_status_lookup (ride_id, created_at);
+ALTER TABLE ride_statuses ADD INDEX idx_ride_chair_status (ride_id, chair_sent_at, created_at);
+
+-- chair_locations検索の改善
+ALTER TABLE chair_locations ADD INDEX idx_chair_latest (chair_id, created_at);
+
+-- 椅子の移動距離集計用テーブル
+CREATE TABLE chair_distance_summary (
+    chair_id VARCHAR(26) PRIMARY KEY,
+    total_distance DECIMAL(10,2),
+    last_updated DATETIME(6),
+    INDEX idx_chair_distance (chair_id)
+);
