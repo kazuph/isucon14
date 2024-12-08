@@ -156,6 +156,84 @@ sequenceDiagram
     App-->>User: 登録完了
 ```
 
+## パフォーマンスクリティカルパス
+
+### 1. 椅子位置情報API (GET /api/chair/*)
+```mermaid
+sequenceDiagram
+    participant Client
+    participant ChairHandler
+    participant DB
+
+    Client->>ChairHandler: GET /api/chair/{id}
+    ChairHandler->>DB: SELECT * FROM chairs
+    ChairHandler->>DB: SELECT * FROM chair_locations
+    Note right of DB: chair_locationsテーブルから<br/>最新の位置情報を取得
+    ChairHandler->>DB: SELECT * FROM ride_statuses
+    Note right of DB: ride_statusesテーブルから<br/>最新のステータスを取得
+    ChairHandler-->>Client: レスポンス
+```
+
+### 2. アプリケーションAPI (GET /api/app/*)
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AppHandler
+    participant DB
+    participant PaymentGateway
+
+    Client->>AppHandler: GET /api/app/{endpoint}
+    AppHandler->>DB: SELECT * FROM users
+    Note right of DB: ユーザー認証
+
+    alt /api/app/rides
+        AppHandler->>DB: SELECT * FROM rides
+        AppHandler->>DB: SELECT * FROM ride_statuses
+        AppHandler->>PaymentGateway: 支払い情報取得
+    else /api/app/nearby-chairs
+        AppHandler->>DB: SELECT * FROM chairs
+        AppHandler->>DB: SELECT * FROM chair_locations
+    end
+
+    AppHandler-->>Client: レスポンス
+```
+
+### 3. 椅子状態更新API (POST /api/chair/*)
+```mermaid
+sequenceDiagram
+    participant Client
+    participant ChairHandler
+    participant DB
+
+    Client->>ChairHandler: POST /api/chair/{endpoint}
+
+    alt /api/chair/coordinate
+        ChairHandler->>DB: INSERT INTO chair_locations
+        Note right of DB: 椅子の位置情報を更新
+    else /api/chair/activity
+        ChairHandler->>DB: UPDATE chairs
+        Note right of DB: 椅子のアクティブ状態を更新
+    end
+
+    ChairHandler-->>Client: レスポンス
+```
+
+### パフォーマンス最適化ポイント
+
+1. **chair_locationsテーブル**
+   - 最新の位置情報取得が頻繁
+   - インデックス: `idx_chair_latest (chair_id, created_at)`
+
+2. **ride_statusesテーブル**
+   - ステータス検索が多い
+   - インデックス:
+     - `idx_ride_status_lookup (ride_id, created_at)`
+     - `idx_ride_chair_status (ride_id, chair_sent_at, created_at)`
+
+3. **集計処理の最適化**
+   - 移動距離計算を事前集計
+   - `chair_distance_summary`テーブルの活用
+
 ## API エンドポイント
 
 ### ユーザー向けAPI (/api/app/*)
