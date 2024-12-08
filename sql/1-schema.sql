@@ -143,10 +143,62 @@ ALTER TABLE ride_statuses ADD INDEX idx_ride_chair_status (ride_id, chair_sent_a
 ALTER TABLE chair_locations ADD INDEX idx_chair_latest (chair_id, created_at);
 
 -- 椅子の移動距離集計用テーブル
-DROP TABLE IF EXISTS chair_distance_summary;
-CREATE TABLE chair_distance_summary (
-    chair_id VARCHAR(26) PRIMARY KEY,
-    total_distance DECIMAL(10,2),
-    last_updated DATETIME(6),
-    INDEX idx_chair_distance (chair_id)
-);
+DROP TABLE IF EXISTS chair_distance_stats;
+CREATE TABLE chair_distance_stats
+(
+    chair_id VARCHAR(26) NOT NULL COMMENT '椅子ID',
+    total_distance INT NOT NULL DEFAULT 0 COMMENT '総移動距離',
+    last_updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '最終更新日時',
+    PRIMARY KEY (chair_id),
+    INDEX idx_last_updated (last_updated_at)
+) COMMENT = '椅子の移動距離集計テーブル';
+
+-- 位置情報更新時の集計更新トリガー
+DELIMITER //
+
+CREATE TRIGGER after_chair_location_insert
+AFTER INSERT ON chair_locations
+FOR EACH ROW
+BEGIN
+    DECLARE prev_lat INT;
+    DECLARE prev_lon INT;
+
+    -- 前回の位置情報を取得
+    SELECT latitude, longitude
+    INTO prev_lat, prev_lon
+    FROM chair_locations
+    WHERE chair_id = NEW.chair_id
+        AND created_at < NEW.created_at
+    ORDER BY created_at DESC
+    LIMIT 1;
+
+    -- 距離を計算して更新
+    IF prev_lat IS NOT NULL THEN
+        INSERT INTO chair_distance_stats
+            (chair_id, total_distance, last_updated_at)
+        VALUES
+            (NEW.chair_id, ABS(NEW.latitude - prev_lat) + ABS(NEW.longitude - prev_lon), NEW.created_at)
+        ON DUPLICATE KEY UPDATE
+            total_distance = total_distance + ABS(NEW.latitude - prev_lat) + ABS(NEW.longitude - prev_lon),
+            last_updated_at = NEW.created_at;
+    END IF;
+END//
+
+DELIMITER ;
+
+-- 既存データの移行
+INSERT INTO chair_distance_stats (chair_id, total_distance, last_updated_at)
+SELECT
+    chair_id,
+    SUM(distance),
+    MAX(created_at)
+FROM (
+    SELECT
+        chair_id,
+        created_at,
+        ABS(latitude - LAG(latitude) OVER (PARTITION BY chair_id ORDER BY created_at)) +
+        ABS(longitude - LAG(longitude) OVER (PARTITION BY chair_id ORDER BY created_at)) AS distance
+    FROM chair_locations
+) tmp
+WHERE distance IS NOT NULL
+GROUP BY chair_id;

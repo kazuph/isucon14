@@ -21,6 +21,6 @@ mkdir -p logs
 sudo query-digester -duration 80 -- -uroot -proot
 
 # slow_query_20241108022705.digestをローカルにコピー
-mv /tmp/slow_query_*.digest logs/
+sudo mv /tmp/slow_query_*.digest logs/
 
 sh ./alp.sh
