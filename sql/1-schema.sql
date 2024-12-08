@@ -202,3 +202,10 @@ FROM (
 ) tmp
 WHERE distance IS NOT NULL
 GROUP BY chair_id;
+
+-- パフォーマンス改善のための追加インデックス
+-- ridesテーブルの検索改善
+ALTER TABLE rides ADD INDEX idx_chair_updated (chair_id, updated_at DESC);
+
+-- chairsテーブルの検索改善
+ALTER TABLE chairs ADD INDEX idx_access_token (access_token);
