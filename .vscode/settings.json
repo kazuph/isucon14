@@ -1,0 +1,7 @@
+{
+  "go.alternateTools": {
+    "gopls": "/home/isucon/local/golang/bin/gopls"
+  },
+  "go.gopath": "/home/isucon/local/golang",
+  "go.goroot": "/home/isucon/local/golang"
+}
