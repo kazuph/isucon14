@@ -4,22 +4,6 @@
       "name": "webapp",
       "path": "."
     },
-    {
-      "name": "go",
-      "path": "./go"
-    },
-    {
-      "name": "sql",
-      "path": "./sql"
-    },
-    {
-      "name": "nginx",
-      "path": "/etc/nginx"
-    },
-    {
-      "name": "logs",
-      "path": "/tmp"
-    }
   ],
   "settings": {
     "files.exclude": {
