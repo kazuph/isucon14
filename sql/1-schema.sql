@@ -140,7 +140,7 @@ ALTER TABLE ride_statuses ADD INDEX idx_ride_status_lookup (ride_id, created_at)
 ALTER TABLE ride_statuses ADD INDEX idx_ride_chair_status (ride_id, chair_sent_at, created_at);
 
 -- chair_locations検索の改善
-ALTER TABLE chair_locations ADD INDEX idx_chair_latest (chair_id, created_at);
+ALTER TABLE chair_locations ADD INDEX idx_chair_locations_chair_id_created_at (chair_id, created_at DESC);
 
 -- 椅子の移動距離集計用テーブル
 DROP TABLE IF EXISTS chair_distance_stats;
@@ -205,11 +205,20 @@ GROUP BY chair_id;
 
 -- パフォーマンス改善のための追加インデックス
 -- ridesテーブルの検索改善
-ALTER TABLE rides ADD INDEX idx_chair_updated (chair_id, updated_at DESC);
-ALTER TABLE rides ADD INDEX idx_user_created (user_id, created_at DESC);
+ALTER TABLE rides ADD INDEX idx_rides_chair_id_updated_at (chair_id, updated_at DESC);
+ALTER TABLE rides ADD INDEX idx_rides_chair_id_created_at (chair_id, created_at DESC);
+ALTER TABLE rides ADD INDEX idx_rides_user_id_created_at (user_id, created_at DESC);
 
 -- chairsテーブルの検索改善
-ALTER TABLE chairs ADD INDEX idx_access_token (access_token);
+ALTER TABLE chairs ADD INDEX idx_chairs_access_token (access_token);
+ALTER TABLE chairs ADD INDEX idx_chairs_is_active (is_active);
 
 -- -- couponsテーブルの検索改善
--- ALTER TABLE coupons ADD INDEX idx_used_by (used_by);
+ALTER TABLE coupons ADD INDEX idx_coupons_used_by (used_by);
+
+-- パフォーマンス最適化のためのインデックス
+ALTER TABLE chair_locations ADD INDEX idx_chair_locations_chair_created (chair_id, created_at DESC);
+ALTER TABLE rides ADD INDEX idx_rides_user_created (user_id, created_at DESC);
+ALTER TABLE rides ADD INDEX idx_rides_chair_created (chair_id, created_at DESC);
+ALTER TABLE ride_statuses ADD INDEX idx_ride_statuses_ride_created (ride_id, created_at DESC);
+ALTER TABLE chairs ADD INDEX idx_chairs_active (is_active);
