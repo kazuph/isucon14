@@ -143,6 +143,7 @@ ALTER TABLE ride_statuses ADD INDEX idx_ride_chair_status (ride_id, chair_sent_a
 ALTER TABLE chair_locations ADD INDEX idx_chair_latest (chair_id, created_at);
 
 -- 椅子の移動距離集計用テーブル
+DROP TABLE IF EXISTS chair_distance_summary;
 CREATE TABLE chair_distance_summary (
     chair_id VARCHAR(26) PRIMARY KEY,
     total_distance DECIMAL(10,2),
