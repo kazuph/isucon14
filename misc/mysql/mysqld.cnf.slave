@@ -1,0 +1,24 @@
+[mysqld]
+# InnoDBバッファプールサイズ（サーバーのRAMに応じて調整）
+innodb_buffer_pool_size = 4G
+
+# InnoDBの同時実行スレッド数
+innodb_thread_concurrency = 8
+
+# テンポラリテーブルのサイズ
+tmp_table_size = 64M
+max_heap_table_size = 64M
+
+# レプリケーション設定
+server-id = 2
+relay-log = /var/log/mysql/mysql-relay-bin.log
+read_only = ON
+
+# レプリケーション接続設定
+replica_host = '192.168.0.11'
+replica_user = 'repl'
+replica_password = 'isucon_repl'
+replica_auto_position = 1
+
+# バインドアドレス（内部ネットワークからの接続を許可）
+bind-address = 0.0.0.0

@@ -25,9 +25,17 @@ innodb_flush_log_at_trx_commit = 1
 
 # バインドアドレス（内部ネットワークからの接続を許可）
 bind-address = 0.0.0.0
+```
 
-# 接続許可の設定
-# 初期設定後、以下のSQLを実行して接続制限を行う
+#### 初期ユーザー設定
+
+MySQLサーバー起動後、以下のコマンドでMySQLプロンプトにアクセスし、SQLコマンドを実行します：
+
+```bash
+sudo mysql -u root
+```
+
+```sql
 CREATE USER 'isucon'@'192.168.0.%' IDENTIFIED BY 'isucon';
 GRANT ALL PRIVILEGES ON isuride.* TO 'isucon'@'192.168.0.%';
 CREATE USER 'isucon'@'localhost' IDENTIFIED BY 'isucon';
@@ -40,16 +48,6 @@ FLUSH PRIVILEGES;
 ```sql
 CREATE USER 'repl'@'%' IDENTIFIED BY 'isucon_repl';
 GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
-```
-
-#### アプリケーション設定（環境変数: `/etc/environment`）
-
-```bash
-ISUCON_DB_HOST=localhost
-ISUCON_DB_PORT=3306
-ISUCON_DB_USER=isucon
-ISUCON_DB_PASSWORD=isucon
-ISUCON_DB_NAME=isuride
 ```
 
 ### 2.2 Server2（Slave DB + アプリケーション）
@@ -71,9 +69,17 @@ replica_auto_position = 1
 
 # バインドアドレス（内部ネットワークからの接続を許可）
 bind-address = 0.0.0.0
+```
 
-# 接続許可の設定
-# 初期設定後、以下のSQLを実行して接続制限を行う
+#### 初期ユーザー設定
+
+MySQLサーバー起動後、以下のコマンドでMySQLプロンプトにアクセスし、SQLコマンドを実行します：
+
+```bash
+sudo mysql -u root
+```
+
+```sql
 CREATE USER 'isucon'@'192.168.0.%' IDENTIFIED BY 'isucon';
 GRANT ALL PRIVILEGES ON isuride.* TO 'isucon'@'192.168.0.%';
 CREATE USER 'isucon'@'localhost' IDENTIFIED BY 'isucon';
@@ -172,39 +178,7 @@ sudo ln -s /etc/nginx/sites-available/isuride.conf /etc/nginx/sites-enabled/isur
 sudo rm -f /etc/nginx/sites-enabled/default
 ```
 
-## 3. サービスの永続化設定（全サーバー共通）
-
-### systemdサービス設定 (`/etc/systemd/system/isuride.service`)
-
-```ini
-[Unit]
-Description=isuride application
-After=mysql.service
-
-[Service]
-WorkingDirectory=/home/isucon/webapp/go
-EnvironmentFile=/etc/environment
-ExecStart=/home/isucon/webapp/go/isuride
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### サービスの有効化
-
-```bash
-# MySQL（Server1, 2のみ）
-sudo systemctl enable mysql
-
-# アプリケーション（Server1, 2のみ）
-sudo systemctl enable isuride
-
-# Nginx（Server3のみ）
-sudo systemctl enable nginx
-```
-
-## 4. 動作確認
+## 3. 動作確認
 
 ### レプリケーションステータスの確認（Server2）
 
@@ -218,13 +192,7 @@ SHOW SLAVE STATUS\G
 sudo nginx -t
 ```
 
-### アプリケーションログの確認
-
-```bash
-sudo journalctl -u isuride -f
-```
-
-## 5. トラブルシューティング
+## 4. トラブルシューティング
 
 ### レプリケーションが停止した場合（Server2）
 

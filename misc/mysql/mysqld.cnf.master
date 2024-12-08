@@ -8,3 +8,13 @@ innodb_thread_concurrency = 8
 # テンポラリテーブルのサイズ
 tmp_table_size = 64M
 max_heap_table_size = 64M
+
+# レプリケーション設定
+server-id = 1
+log-bin = /var/log/mysql/mysql-bin.log
+binlog_format = ROW
+sync_binlog = 1
+innodb_flush_log_at_trx_commit = 1
+
+# バインドアドレス（内部ネットワークからの接続を許可）
+bind-address = 0.0.0.0
