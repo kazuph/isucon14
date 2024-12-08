@@ -12,6 +12,17 @@
 
 ### 2.1 Server1（Master DB + アプリケーション）
 
+#### Nginxの停止と無効化
+
+```bash
+# Nginxを停止し、自動起動を無効化
+sudo systemctl stop nginx
+sudo systemctl disable nginx
+```
+
+#### アプリケーション設定
+アプリケーションは8080ポートで直接リッスンします。
+
 #### MySQL設定 (`/etc/mysql/mysql.conf.d/mysqld.cnf`)
 
 ```conf
@@ -51,6 +62,17 @@ GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
 ```
 
 ### 2.2 Server2（Slave DB + アプリケーション）
+
+#### Nginxの停止と無効化
+
+```bash
+# Nginxを停止し、自動起動を無効化
+sudo systemctl stop nginx
+sudo systemctl disable nginx
+```
+
+#### アプリケーション設定
+アプリケーションは8080ポートで直接リッスンします。
 
 #### MySQL設定 (`/etc/mysql/mysql.conf.d/mysqld.cnf`)
 
@@ -119,30 +141,17 @@ ISUCON_DB_NAME=isuride
 
 ### 2.3 Server3（ロードバランサー）
 
-#### Nginx設定 (`/etc/nginx/nginx.conf`)
-
-```nginx
-user www-data;
-worker_processes auto;
-pid /run/nginx.pid;
-
-events {
-    worker_connections 2048;
-    multi_accept on;
-    use epoll;
-}
-```
-
 #### サイト設定 (`/etc/nginx/sites-available/isuride.conf`)
 
 ```nginx
+# アプリケーションサーバーは8080ポートで直接リッスン
 upstream write_servers {
-    server 192.168.0.11:8080;
+    server 192.168.0.11:8080;  # Server1: Master
 }
 
 upstream read_servers {
-    server 192.168.0.12:8080;
-    server 192.168.0.11:8080 backup;
+    server 192.168.0.12:8080;  # Server2: Slave
+    server 192.168.0.11:8080 backup;  # Server1: バックアップ
 }
 
 server {
