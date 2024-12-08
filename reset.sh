@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# golangの更新
+pushd go && go build -o isuride && sudo systemctl restart isuride-go.service && popd
+
 # nginxの設定をコピー
 sudo cp misc/nginx/nginx.conf /etc/nginx/nginx.conf
 sudo systemctl daemon-reload
@@ -17,6 +21,6 @@ mkdir -p logs
 sudo query-digester -duration 80 -- -uroot -proot
 
 # slow_query_20241108022705.digestをローカルにコピー
-cp /tmp/slow_query_*.digest logs/
+mv /tmp/slow_query_*.digest logs/
 
 sh ./alp.sh
